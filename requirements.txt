@@ -6,3 +6,4 @@ gradio
 pytest
 ruff
 imageio-ffmpeg
+matplotlib
