@@ -130,8 +130,9 @@ class QualityReport:
         return f"Please film again. {self.root_problems[0].message}"
 
 
-def _check_duration(seq: PoseSequence, cfg: dict) -> QualityCheck:
-    seconds = seq.n_frames / seq.fps
+def check_clip_length(seconds: float, config: dict | None = None) -> QualityCheck:
+    """Duration check on its own, so a clip can be rejected before any pose extraction."""
+    cfg = QUALITY_CONFIG if config is None else config
     lo, hi = cfg["min_duration_s"], cfg["max_duration_s"]
     if seconds < lo:
         msg = (f"The clip is too short ({seconds:.1f} s). Film the whole shot, from your stance "
@@ -141,6 +142,10 @@ def _check_duration(seq: PoseSequence, cfg: dict) -> QualityCheck:
     else:
         msg = ""
     return QualityCheck("duration", not msg, f"{seconds:.1f} s long (allowed {lo:g}-{hi:g} s)", msg, seconds)
+
+
+def _check_duration(seq: PoseSequence, cfg: dict) -> QualityCheck:
+    return check_clip_length(seq.n_frames / seq.fps, cfg)
 
 
 def _check_detection(seq: PoseSequence, cfg: dict) -> QualityCheck:

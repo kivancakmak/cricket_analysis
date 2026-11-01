@@ -2,7 +2,7 @@ mediapipe
 opencv-python
 numpy
 pyyaml
-gradio
+gradio>=6
 pytest
 ruff
 imageio-ffmpeg

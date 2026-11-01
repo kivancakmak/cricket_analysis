@@ -24,3 +24,6 @@ flagged/
 .gradio/
 .env
 .DS_Store
+
+# Local tooling config
+.claude/
