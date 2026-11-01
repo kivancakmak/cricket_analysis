@@ -1,0 +1,177 @@
+# =============================================================================
+# FORWARD DEFENCE - scoring rules
+#
+# STATUS: PLACEHOLDER - to be set by coaches.
+# Every number and every piece of wording below is a sensible starting guess
+# from standard coaching points. It has NOT been validated by a coach. Edit
+# freely - no code changes needed; the file is checked when the app loads it
+# and any mistake is reported with the rule it belongs to.
+#
+# HOW A RULE WORKS
+#   metric + moment   what is measured (see the list below).
+#   ideal             range that scores full marks: {min: .., max: ..}. Give only
+#                     'min' or only 'max' for a one-sided rule.
+#   tolerance         how far outside the ideal range the score falls from 100%
+#                     to 0%, in the metric's units (straight-line falloff).
+#                     Small tolerance = strict, large = forgiving.
+#   weight            how much the rule matters (bigger = more of the total and
+#                     more likely to be chosen as the headline fix).
+#   category          which sub-score it counts towards.
+#   fix / drill       text shown when the rule fails. Either one text, or
+#                     {low: .., high: ..} to say something different when the
+#                     value is too low or too high.
+#   A rule counts as "passed" when it scores at least `pass_score` (0.9).
+#
+# METRICS (moment: landing = front foot lands, contact = bat meets ball)
+#   head_over_front_knee  landing/contact  head ahead of front knee, in torso
+#                                          lengths (negative = head behind knee)
+#   head_stability        (no moment)      biggest head movement between landing
+#                                          and contact, in torso lengths
+#   balance               landing/contact  hips between the feet: 0 = over back
+#                                          foot, 1 = over front foot
+#   stride_length         landing          gap between the feet / body height
+#   front_knee_angle      landing          degrees, 180 = straight leg
+#   spine_tilt            landing/contact  degrees, + = leaning towards the bowler
+#   front_elbow_height    contact          0 = elbow at wrist height,
+#                                          1 = at shoulder height, >1 above it
+# =============================================================================
+shot: forward_defence
+title: Forward defence
+status: "PLACEHOLDER – to be set by coaches"
+pass_score: 0.9
+categories:
+  - "Head & Balance"
+  - "Footwork"
+  - "Body Shape"
+
+rules:
+  # ------------------------------------------------------------ Head & Balance
+  - id: head_over_knee_landing
+    label: Head over the front knee when the front foot lands
+    category: "Head & Balance"
+    metric: head_over_front_knee
+    moment: landing
+    ideal: {min: -0.20, max: 0.30}      # PLACEHOLDER
+    tolerance: 0.35
+    weight: 3
+    fix:
+      low: "Your head is dropping back behind your front knee as your front foot lands. That leaves you leaning back, so the bat comes down away from your body."
+      high: "Your head is getting well ahead of your front knee as your front foot lands. You are lunging at the ball and will struggle to stay balanced."
+    drill:
+      low: "Freeze drill: take your stance, stride forward slowly and freeze as the front foot lands. Check your nose is over your front knee. Repeat 10 times, then do the same with a gentle feed."
+      high: "Stride-and-hold: step into the shot and hold the finish for three seconds with your weight balanced. A partner should be able to tell you could lift your back foot without falling."
+
+  - id: head_over_knee_contact
+    label: Head over the front knee at contact
+    category: "Head & Balance"
+    metric: head_over_front_knee
+    moment: contact
+    ideal: {min: -0.15, max: 0.35}      # PLACEHOLDER
+    tolerance: 0.35
+    weight: 2
+    fix:
+      low: "At the moment you hit the ball your head has fallen back behind your front knee, so you are playing the ball from underneath your eyes rather than over it."
+      high: "At contact your head is too far in front of your front knee, so your weight is tipping over the front foot."
+    drill:
+      low: "Shadow-bat in front of a mirror: freeze at the point of contact and check your head is level with, or just past, your front knee."
+      high: "Slow-motion defence with a ball on a tee: reach the contact point, hold, and feel your weight stay centred rather than falling forward."
+
+  - id: head_still
+    label: Keeping the head still from landing to contact
+    category: "Head & Balance"
+    metric: head_stability
+    ideal: {max: 0.15}                  # PLACEHOLDER
+    tolerance: 0.25
+    weight: 2.5
+    fix: "Your head is moving too much between your front foot landing and the ball being hit. A moving head makes it hard to judge the line and length of the ball."
+    drill: "Balance-point drill: place a small cone or ball on your cap and play slow forward defences without letting it fall. Or film yourself side-on and check the head stays level."
+
+  - id: balance_contact
+    label: Weight over the front foot at contact
+    category: "Head & Balance"
+    metric: balance
+    moment: contact
+    ideal: {min: 0.50, max: 0.90}       # PLACEHOLDER
+    tolerance: 0.30
+    weight: 2
+    fix:
+      low: "At contact too much of your weight is still on your back foot. Get your weight moving into the shot, towards the ball."
+      high: "You are falling onto your front foot at contact. Keep your weight in control so you could still adjust to the ball."
+    drill:
+      low: "Step-and-press: stride to a mark on the ground and press the front knee towards the ball. Feel your weight transfer, then play the defensive shot."
+      high: "Hold the finish for three seconds after each defence. If you wobble or fall forward, shorten your stride until you can hold it."
+
+  # ------------------------------------------------------------------ Footwork
+  - id: stride_length
+    label: Length of the front-foot stride
+    category: "Footwork"
+    metric: stride_length
+    moment: landing
+    ideal: {min: 0.50, max: 0.90}       # PLACEHOLDER (body heights)
+    tolerance: 0.30
+    weight: 3
+    fix:
+      low: "Your stride is short, so you are not getting your front foot close to the pitch of the ball. That makes you play with a stiff front leg and hard hands."
+      high: "Your stride is too long. Over-reaching leaves you stretched, off balance and unable to get your head over the ball."
+    drill:
+      low: "Place a marker on the floor about a bat-and-a-half in front of your front toe. Stride to it on every ball in the net session."
+      high: "Place a marker a little closer than your usual stride and stride only to it. Shorter is easier to control, and you can lengthen it once the head stays still."
+
+  - id: front_knee_bend
+    label: Front knee bend at landing
+    category: "Footwork"
+    metric: front_knee_angle
+    moment: landing
+    ideal: {min: 105, max: 155}         # PLACEHOLDER (degrees, 180 = straight)
+    tolerance: 30
+    weight: 2.5
+    fix:
+      low: "Your front knee is bending too much and collapsing, which makes it hard to push off and stay balanced."
+      high: "Your front leg is too straight and stiff. Bend the front knee as you land so your head can get over the ball and your body can absorb it."
+    drill:
+      low: "Wall drill: stride towards a wall and stop with the knee just short of touching it. Feel a firm, bent front leg, not a collapsed one."
+      high: "Slow-motion lunges: stride and let the front knee bend over the toes, with your head over the knee, then play the shot."
+
+  # ---------------------------------------------------------------- Body Shape
+  - id: spine_lean_landing
+    label: Upper body lean as the front foot lands
+    category: "Body Shape"
+    metric: spine_tilt
+    moment: landing
+    ideal: {min: 5, max: 25}            # PLACEHOLDER (degrees towards the bowler)
+    tolerance: 15
+    weight: 2
+    fix:
+      low: "You are staying too upright, or leaning back, as your front foot lands. Lead with your head and chest towards the ball."
+      high: "You are bending too far forward from the waist as your front foot lands, which pulls you off balance."
+    drill:
+      low: "Stand side-on to a wall and stride until your front shoulder points at the bowler and your chest leans slightly forward. Hold it, then repeat with the bat."
+      high: "Imagine a straight line from your head to your hips. Practise striding while keeping that line, with only a small lean from the hips."
+
+  - id: spine_lean_contact
+    label: Upper body lean at contact
+    category: "Body Shape"
+    metric: spine_tilt
+    moment: contact
+    ideal: {min: 8, max: 30}            # PLACEHOLDER
+    tolerance: 15
+    weight: 1.5
+    fix:
+      low: "At contact you are too upright. Let your head and shoulders lead the shot a little more."
+      high: "At contact you are bent too far forward. Stay tall through the shot so the bat can come down straight."
+    drill: "Shadow practice at a mirror or on video: freeze at contact and check your head, shoulders and hips make a gentle forward-leaning line."
+
+  - id: front_elbow_contact
+    label: Front elbow position at contact
+    category: "Body Shape"
+    metric: front_elbow_height
+    moment: contact
+    ideal: {min: 0.70, max: 1.20}       # PLACEHOLDER
+    tolerance: 0.40
+    weight: 2
+    fix:
+      low: "Your front elbow is dropping at contact. A low elbow means the bat face can turn and the ball may pop up."
+      high: "Your front elbow is flaring up too high at contact. Keep it softer and closer to your body so the bat stays straight."
+    drill:
+      low: "Elbow-up drill: place a ball or glove under your front armpit and defend balls with the elbow staying high until contact."
+      high: "Shadow-bat in front of a mirror: keep the elbow pointing at the bowler, not up to the sky, and check the bat comes down straight."

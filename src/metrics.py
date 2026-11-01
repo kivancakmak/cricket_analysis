@@ -203,6 +203,10 @@ METRIC_SPECS: dict[str, tuple[str, Callable]] = {
 }
 
 
+#: Every metric name ``compute_metrics`` can produce (the rule files refer to these).
+METRIC_NAMES: tuple[str, ...] = (*METRIC_SPECS, "head_stability")
+
+
 def _snapshot(seq: PoseSequence, frame: int, k: int) -> _Pose | None:
     lo, hi = max(0, frame - k), min(seq.n_frames, frame + k + 1)
     frames = [i for i in range(lo, hi) if seq.detected[i]]

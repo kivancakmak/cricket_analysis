@@ -1,0 +1,154 @@
+# =============================================================================
+# FRONT-FOOT DRIVE - scoring rules
+#
+# STATUS: PLACEHOLDER - to be set by coaches.
+# Every number and every piece of wording below is a sensible starting guess
+# from standard coaching points. It has NOT been validated by a coach. Edit
+# freely - no code changes needed; the file is checked when the app loads it
+# and any mistake is reported with the rule it belongs to.
+#
+# The format and the list of metrics are explained at the top of
+# rules/forward_defence.yaml. Compared with forward defence, the drive uses a
+# longer stride, a head further over the ball, more forward lean and puts more
+# weight on a high front elbow.
+# =============================================================================
+shot: front_foot_drive
+title: Front-foot drive
+status: "PLACEHOLDER – to be set by coaches"
+pass_score: 0.9
+categories:
+  - "Head & Balance"
+  - "Footwork"
+  - "Body Shape"
+
+rules:
+  # ------------------------------------------------------------ Head & Balance
+  - id: head_over_knee_landing
+    label: Head over the front knee when the front foot lands
+    category: "Head & Balance"
+    metric: head_over_front_knee
+    moment: landing
+    ideal: {min: -0.10, max: 0.40}      # PLACEHOLDER
+    tolerance: 0.35
+    weight: 2.5
+    fix:
+      low: "Your head is falling back behind your front knee as your front foot lands. To drive you need your head leading into the shot."
+      high: "Your head is getting too far ahead of your front knee as you land, so you are lunging and will lose balance through the shot."
+    drill:
+      low: "Freeze drill: stride into your drive position slowly and freeze as the front foot lands. Your nose should be over the front knee. Repeat 10 times before adding a ball."
+      high: "Stride-and-hold: drive from a tee, finish the shot and hold your finish for three seconds. If you topple forward, shorten the stride."
+
+  - id: head_over_knee_contact
+    label: Head over the ball and front knee at contact
+    category: "Head & Balance"
+    metric: head_over_front_knee
+    moment: contact
+    ideal: {min: 0.00, max: 0.50}       # PLACEHOLDER
+    tolerance: 0.35
+    weight: 3
+    fix:
+      low: "At contact your head is behind your front knee, so you are hitting the ball with your weight going backwards. That is how drives go in the air to the fielder."
+      high: "At contact your head is far in front of your front knee, so your weight is falling past the ball and you cannot control the shot."
+    drill:
+      low: "Tee drill: drive the ball along the ground with your nose over the front knee at impact. Film side-on and check the head position at contact."
+      high: "Drive from a tee and hold the finish. Keep your head over the ball but your weight balanced between both feet."
+
+  - id: head_still
+    label: Keeping the head still from landing to contact
+    category: "Head & Balance"
+    metric: head_stability
+    ideal: {max: 0.15}                  # PLACEHOLDER
+    tolerance: 0.25
+    weight: 2
+    fix: "Your head is moving too much between your front foot landing and the ball being hit. A still head helps you see the ball and time the drive."
+    drill: "Balance a small cone on your cap and play slow drives without letting it fall, or film yourself side-on and check the head stays level."
+
+  - id: balance_contact
+    label: Weight over the front foot at contact
+    category: "Head & Balance"
+    metric: balance
+    moment: contact
+    ideal: {min: 0.55, max: 0.95}       # PLACEHOLDER
+    tolerance: 0.30
+    weight: 2
+    fix:
+      low: "At contact too much of your weight is still on your back foot, so you are driving with only your arms."
+      high: "You are falling onto your front foot at contact. Stay balanced so the bat can swing through the line."
+    drill:
+      low: "Step-and-drive: stride to a marker, press the front knee forward, and drive from a tee. Feel the weight move into the ball."
+      high: "Hold your finish for three seconds after each drive. If you are falling over, shorten the stride a little."
+
+  # ------------------------------------------------------------------ Footwork
+  - id: stride_length
+    label: Length of the front-foot stride
+    category: "Footwork"
+    metric: stride_length
+    moment: landing
+    ideal: {min: 0.70, max: 1.10}       # PLACEHOLDER (body heights)
+    tolerance: 0.35
+    weight: 3.5
+    fix:
+      low: "Your stride is too short to get to the pitch of the ball. You will end up reaching for it with your hands."
+      high: "Your stride is over-reaching. Stretching too far leaves you off balance and slows your swing."
+    drill:
+      low: "Place a marker on the floor about a bat-and-a-half in front of your front toe and stride to it on every drive in the net session."
+      high: "Place a marker slightly closer than your usual stride and stride only to it. Lengthen it once your head stays still."
+
+  - id: front_knee_bend
+    label: Front knee bend at landing
+    category: "Footwork"
+    metric: front_knee_angle
+    moment: landing
+    ideal: {min: 100, max: 150}         # PLACEHOLDER (degrees, 180 = straight)
+    tolerance: 30
+    weight: 2
+    fix:
+      low: "Your front knee is bending too much and collapsing, which makes it hard to drive upwards through the shot."
+      high: "Your front leg is too straight and stiff. Bend the front knee as you land so you can get your head and weight into the shot."
+    drill:
+      low: "Wall drill: stride towards a wall and stop with your knee just short of touching it. Feel a firm, bent front leg, not a collapsed one."
+      high: "Slow-motion lunge: stride and let the front knee bend over the toes with your head over it, then play the drive."
+
+  # ---------------------------------------------------------------- Body Shape
+  - id: spine_lean_landing
+    label: Upper body lean as the front foot lands
+    category: "Body Shape"
+    metric: spine_tilt
+    moment: landing
+    ideal: {min: 8, max: 28}            # PLACEHOLDER (degrees towards the bowler)
+    tolerance: 15
+    weight: 2
+    fix:
+      low: "You are too upright, or leaning back, as the front foot lands. Lead with your head and chest towards the ball."
+      high: "You are bending too far forward from the waist as you land, which pulls you off balance."
+    drill:
+      low: "Stand side-on to a wall, stride until your front shoulder points at the bowler and your chest leans slightly forward. Hold it, then repeat with the bat."
+      high: "Practise striding while keeping a straight line from head to hips, with only a small lean from the hips."
+
+  - id: spine_lean_contact
+    label: Upper body lean at contact
+    category: "Body Shape"
+    metric: spine_tilt
+    moment: contact
+    ideal: {min: 12, max: 35}           # PLACEHOLDER
+    tolerance: 15
+    weight: 2
+    fix:
+      low: "At contact you are too upright. Let your head and shoulders lead the drive so your weight goes through the ball."
+      high: "At contact you are bent too far forward. Stay tall enough for the bat to swing in a smooth arc."
+    drill: "Shadow-drive at a mirror or on video: freeze at contact and check your head, shoulders and hips make a gentle forward-leaning line."
+
+  - id: front_elbow_contact
+    label: Front elbow position at contact
+    category: "Body Shape"
+    metric: front_elbow_height
+    moment: contact
+    ideal: {min: 0.85, max: 1.30}       # PLACEHOLDER
+    tolerance: 0.40
+    weight: 3
+    fix:
+      low: "Your front elbow is dropping at contact. A high front elbow is the key to a straight bat and a drive along the ground."
+      high: "Your front elbow is flaring too high at contact. Keep it soft so the bat travels straight."
+    drill:
+      low: "Elbow-up drill: tuck a glove under the front armpit and drive from a tee, keeping the elbow high until after contact."
+      high: "Shadow-drive at a mirror: point the front elbow at the bowler, not at the sky, and check the bat comes through straight."
