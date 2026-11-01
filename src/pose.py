@@ -18,7 +18,9 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-DEFAULT_MODEL_PATH = Path(__file__).resolve().parent.parent / "models" / "pose_landmarker_full.task"
+from src.model import MODEL_PATH
+
+DEFAULT_MODEL_PATH = MODEL_PATH
 NUM_LANDMARKS = 33
 
 # Landmark array layout: (n_frames, 33, 4) with channels [x, y, z, visibility].

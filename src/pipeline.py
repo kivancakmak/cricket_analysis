@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import shutil
 import tempfile
 import time
 from collections.abc import Callable
@@ -37,6 +38,7 @@ from pathlib import Path
 import cv2
 
 from src.metrics import Metrics, compute_metrics
+from src.model import ensure_model
 from src.orientation import Orientation, detect_orientation
 from src.overlay import export_key_frames, render_overlay
 from src.phases import KeyMoment, KeyMoments, detect_key_moments
@@ -177,6 +179,25 @@ def _score_dict(s: ScoreResult | None) -> dict | None:
 
 
 # --------------------------------------------------------------------------- the pipeline
+def cleanup_stale_runs(max_age_s: float = 3 * 3600) -> int:
+    """Delete this app's old temporary output folders; returns how many were removed.
+
+    ``analyze`` (and the labelling tab) write into ``cricket_*`` folders under the system
+    temp directory. A long-running server calls this so those do not pile up and so
+    uploaded footage does not linger.
+    """
+    removed = 0
+    cutoff = time.time() - max_age_s
+    for path in Path(tempfile.gettempdir()).glob("cricket_*"):
+        try:
+            if path.is_dir() and path.stat().st_mtime < cutoff:
+                shutil.rmtree(path, ignore_errors=True)
+                removed += 1
+        except OSError:
+            continue                           # another worker got there first
+    return removed
+
+
 def probe_video(video_path: str | Path) -> dict:
     """Basic facts about a video; ``duration_s`` is None if the container does not say."""
     cap = cv2.VideoCapture(str(video_path))
@@ -259,9 +280,14 @@ def analyze(
     # 1. Pose.
     t = stage("Finding the batter")
     try:
-        raw = extract_pose(video_path)
-    except FileNotFoundError as exc:
-        return finish(AnalysisResult("error", shot_type, f"The pose model is missing. {exc}", info))
+        try:
+            raw = extract_pose(video_path)
+        except FileNotFoundError:
+            ensure_model()                     # first run on a fresh machine: fetch the model, then retry once
+            raw = extract_pose(video_path)
+    except OSError as exc:                     # model missing and could not be downloaded
+        return finish(AnalysisResult("error", shot_type, "The pose model is missing and could not be "
+                                     f"downloaded ({exc}). Run: python scripts/download_model.py", info))
     except ValueError:
         return finish(AnalysisResult("error", shot_type, "We couldn't read that video. "
                                      "Try an .mp4 file filmed on a phone.", info))

@@ -1,0 +1,5 @@
+# Everything needed to develop: run the app plus tests, linting and the debug plots.
+-r requirements.txt
+pytest
+ruff
+matplotlib

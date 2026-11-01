@@ -1,3 +1,16 @@
+---
+title: Cricket Batting AI Coach
+emoji: 🏏
+colorFrom: green
+colorTo: blue
+sdk: gradio
+sdk_version: 6.31.0
+python_version: "3.12"
+app_file: app.py
+pinned: false
+short_description: Film one batting shot, get a score and fixes
+---
+
 # Cricket Batting AI Coach
 
 **Film one batting shot on your phone and get a score out of 100, a skeleton overlay of your technique, and the one or two things to fix first - with a drill for each.**
@@ -63,8 +76,7 @@ Requires **Python 3.10+**. Nothing needs a GPU.
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python scripts/download_model.py
+pip install -r requirements-dev.txt
 python app.py
 ```
 
@@ -73,12 +85,11 @@ python app.py
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-python scripts/download_model.py
+pip install -r requirements-dev.txt
 python app.py
 ```
 
-Then open <http://127.0.0.1:7860>. `download_model.py` fetches the 9 MB MediaPipe pose model into `models/` (it is not stored in the repository). `requirements.txt` includes `imageio-ffmpeg`, so you do not need to install ffmpeg yourself.
+Then open <http://127.0.0.1:7860>. The 9 MB MediaPipe pose model is **downloaded automatically on first start** into `models/` (it is not stored in the repository); `python scripts/download_model.py` does the same by hand. `requirements-dev.txt` adds the test and plotting tools on top of `requirements.txt` (the runtime dependencies only, which is what the hosted Space installs). It includes `imageio-ffmpeg`, so you do not need to install ffmpeg yourself.
 
 Useful commands:
 
@@ -87,9 +98,14 @@ python -m src.pipeline clip.mp4 forward_defence          # full analysis, prints
 python -m src.pose clip.mp4                              # detection rate and mean visibility
 python scripts/plot_phases.py clip.mp4                   # debug plot of the velocity curves
 python scripts/agreement_report.py                       # AI-vs-coach report (see below)
-pytest                                                   # 147 tests
+python scripts/prepare_example.py my.mov forward_defence # make an example clip for the app
+pytest                                                   # the test suite
 ruff check .                                             # lint
 ```
+
+## Deploy it as a Hugging Face Space
+
+The repository is ready to run as a free CPU Space (the YAML block at the top of this file is the Space configuration). The model downloads itself on startup, one analysis runs at a time on the free tier's 2 CPU cores, uploaded clips are deleted within about three hours, and the coach-labelling tab is hidden on a public Space (set `ENABLE_LABELLING=1` to show it). Step-by-step instructions: **[docs/deploy_hf_space.md](docs/deploy_hf_space.md)**. To show your own example clips on the Space, see [examples/README.md](examples/README.md).
 
 ## For coaches: editing the rules
 
@@ -151,7 +167,7 @@ This is a proof of concept; please read these before judging the output.
 - **Needs a clean clip:** one batter, static camera roughly square to the pitch, whole body in frame, 2-8 seconds, decent light. Anything else is rejected with advice (the thresholds are untuned beyond the sample clips).
 - **2D measurements.** Angles and distances come from the image plane, which is right for a side-on camera but not for oblique views. The far-side limbs are often hidden, so the near-side joints are preferred and confidence is lowered when visibility is low.
 - **Orthodox stance assumed** when inferring handedness (a right-hander leads with the left leg).
-- **Webcam recording and the public deployment are untested** (the Hugging Face Spaces release is the next step).
+- **Webcam recording and the live Space are untested.** The free CPU tier has 2 cores, so expect a clip to take a few times longer than on a laptop, and the Space sleeps when idle.
 
 ## Phase 2: bowling
 
@@ -169,13 +185,16 @@ Everything else is reused as it is: pose extraction, smoothing, orientation, the
 
 ```
 app.py              Gradio web app (analysis + coach labelling tabs)
+requirements.txt    runtime dependencies (what a Space installs); requirements-dev.txt adds test tools
+packages.txt        system libraries a Space needs for OpenCV
+examples/           your own example clips for the app (see examples/README.md)
 labelling_tab.py    the coach-labelling tab
 ui_cards.py         HTML cards shared by both tabs
 src/                pose, orientation, phases, metrics, scoring, quality, overlay, pipeline, labels, agreement
 rules/              coach-editable YAML rule files (one per shot)
 scripts/            model download, debug plots, agreement report
 labels/             coach labels (labels.csv)
-tests/              147 tests: synthetic poses with known answers, no video or model needed
+tests/              synthetic poses with known answers: no video or model needed
 data/               local sample clips (raw videos are git-ignored)
 docs/               screenshots and demo GIF for this README
 ```

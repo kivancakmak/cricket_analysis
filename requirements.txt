@@ -1,9 +1,8 @@
+# Runtime dependencies (this file is what a Hugging Face Space installs).
+# Development tools (pytest, ruff, matplotlib) are in requirements-dev.txt.
 mediapipe
-opencv-python
+opencv-contrib-python   # the OpenCV build mediapipe itself depends on; avoids two competing cv2 packages
 numpy
 pyyaml
 gradio>=6
-pytest
-ruff
-imageio-ffmpeg
-matplotlib
+imageio-ffmpeg          # bundled ffmpeg, so no system install is needed

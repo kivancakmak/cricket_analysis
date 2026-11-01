@@ -9,10 +9,20 @@ here depends on Gradio except this file.
 """
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import gradio as gr
 
 from labelling_tab import build_labelling_tab
-from src.pipeline import SHOT_LABELS, SHOT_TYPES, AnalysisResult, analyze
+from src.model import ensure_model
+from src.pipeline import (
+    SHOT_LABELS,
+    SHOT_TYPES,
+    AnalysisResult,
+    analyze,
+    cleanup_stale_runs,
+)
 from ui_cards import (  # noqa: F401  (re-exported for tests and the labelling tab)
     DISCLAIMER,
     _esc,
@@ -39,6 +49,54 @@ FILMING_TIPS = """
 - Only the batter in shot. Start filming a second **before** the shot and stop after the follow-through.
 - One shot per clip, **3-6 seconds**.
 """
+PRIVACY_NOTE = "Clips are processed on the server and deleted again within about three hours."
+
+# ----------------------------------------------------------------------------- deployment settings
+EXAMPLES_DIR = Path(__file__).resolve().parent / "examples"
+EXAMPLE_SUFFIXES = {".mp4", ".mov", ".webm"}
+MAX_EXAMPLE_BYTES = 15 * 1024 * 1024
+MAX_EXAMPLES = 4
+KEEP_FILES_SECONDS = 3 * 3600      # uploads and rendered outputs older than this are deleted
+
+
+def on_hf_space() -> bool:
+    """True when running as a Hugging Face Space (the platform sets ``SPACE_ID``)."""
+    return bool(os.environ.get("SPACE_ID"))
+
+
+def labelling_enabled() -> bool:
+    """Whether to show the coach-labelling tab.
+
+    Off on a public Space by default: labels would be written to the Space's temporary
+    disk (lost on restart) and anyone could add them. Set ``ENABLE_LABELLING=1`` in the
+    Space settings to turn it on, or ``ENABLE_LABELLING=0`` to hide it locally.
+    """
+    return os.environ.get("ENABLE_LABELLING", "0" if on_hf_space() else "1") == "1"
+
+
+def concurrency_limit() -> int:
+    """Analyses run at once: the free Space has 2 CPU cores, so one at a time there."""
+    return 1 if on_hf_space() else 2
+
+
+def discover_examples(directory: Path = EXAMPLES_DIR) -> list[list[str]]:
+    """``[path, shot_type]`` for the example clips in ``examples/``.
+
+    The shot type comes from the file name prefix (``front_foot_drive_*.mp4`` or
+    ``forward_defence_*.mp4``; anything else is treated as forward defence). Files over
+    15 MB are skipped so the Space stays small.
+    """
+    if not directory.is_dir():
+        return []
+    found = []
+    for path in sorted(directory.iterdir()):
+        if path.suffix.lower() not in EXAMPLE_SUFFIXES or path.stat().st_size > MAX_EXAMPLE_BYTES:
+            continue
+        shot = next((s for s in SHOT_TYPES if path.stem.lower().startswith(s)), SHOT_TYPES[0])
+        found.append([str(path), shot])
+    return found[:MAX_EXAMPLES]
+
+
 STAGE_ORDER = ["Checking the video", "Finding the batter", "Finding the key moments",
                "Checking the clip quality", "Scoring the shot", "Drawing the skeleton video"]
 
@@ -86,6 +144,7 @@ def run_analysis(video: str | None, shot_type: str, progress: gr.Progress = _PRO
         index = STAGE_ORDER.index(name) if name in STAGE_ORDER else 0
         progress(index / len(STAGE_ORDER), desc=name)
 
+    cleanup_stale_runs(KEEP_FILES_SECONDS)
     try:
         result = analyze(video, shot_type, on_stage=on_stage)
     except Exception as exc:  # noqa: BLE001 - last resort: never show a stack trace to the user
@@ -112,9 +171,16 @@ def _analysis_tab() -> None:
             shot = gr.Dropdown(choices=[(SHOT_LABELS[s], s) for s in SHOT_TYPES], value=SHOT_TYPES[0],
                                label="Shot type", interactive=True)
             go = gr.Button("Analyse my shot", variant="primary", size="lg")
+            gr.Markdown(f"<small>{PRIVACY_NOTE}</small>")
         with gr.Column(scale=1, min_width=300):
             summary = gr.HTML(label="Result")
             timing = gr.HTML()
+
+    examples = discover_examples()
+    if examples:
+        # Clicking an example only fills in the clip and shot type; the visitor presses Analyse.
+        gr.Examples(examples=examples, inputs=[video, shot], label="Try an example clip",
+                    examples_per_page=MAX_EXAMPLES)
 
     fixes = gr.HTML()
     with gr.Row(equal_height=False):
@@ -137,20 +203,34 @@ def _analysis_tab() -> None:
 
 
 def build_app() -> gr.Blocks:
-    """Assemble the two-tab Gradio app: analysis and coach labelling."""
-    with gr.Blocks(title=TITLE, fill_width=False) as demo:
+    """Assemble the Gradio app: the analysis tab, plus coach labelling when enabled."""
+    # delete_cache: every hour, remove files Gradio cached (uploads, outputs) that are older than 3 hours.
+    with gr.Blocks(title=TITLE, fill_width=False, delete_cache=(3600, KEEP_FILES_SECONDS)) as demo:
         gr.Markdown(f"# {TITLE}\n{INTRO}")
-        with gr.Tabs():
-            with gr.Tab("Analyse a shot"):
-                _analysis_tab()
-            with gr.Tab("Coach labelling"):
-                build_labelling_tab(STAGE_ORDER, _PROGRESS)
+        if labelling_enabled():
+            with gr.Tabs():
+                with gr.Tab("Analyse a shot"):
+                    _analysis_tab()
+                with gr.Tab("Coach labelling"):
+                    build_labelling_tab(STAGE_ORDER, _PROGRESS)
+        else:
+            _analysis_tab()
         gr.Markdown(f"<small>{_esc(DISCLAIMER)}</small>")
-    demo.queue(max_size=8, default_concurrency_limit=2)
+    demo.queue(max_size=8, default_concurrency_limit=concurrency_limit())
     return demo
 
 
 demo = build_app()
 
+
+def prepare() -> None:
+    """Startup work: fetch the pose model if it is missing (no manual step on a fresh Space)."""
+    try:
+        ensure_model()
+    except OSError as exc:      # the app still starts; the first analysis retries and reports a clear error
+        print(f"Could not download the pose model yet ({exc}); will retry on the first analysis.")
+
+
 if __name__ == "__main__":
+    prepare()
     demo.launch(css=CSS, theme=gr.themes.Soft())
