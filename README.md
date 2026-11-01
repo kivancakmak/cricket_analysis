@@ -202,3 +202,5 @@ docs/               screenshots and demo GIF for this README
 ## Tech stack
 
 Python 3.10+ - MediaPipe Pose Landmarker (Tasks API) - OpenCV and ffmpeg (via `imageio-ffmpeg`) for video - NumPy - PyYAML - Gradio 6 - pytest and ruff.
+#   c r i c k e t _ a n a l y s i s  
+ 
