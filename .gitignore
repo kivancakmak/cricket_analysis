@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Raw videos and outputs (never commit)
+data/raw/
+data/*.mp4
+data/*.mov
+data/*.avi
+data/*.mkv
+outputs/*
+!outputs/.gitkeep
+
+# Model files
+models/*.task
+
+# Gradio / misc
+flagged/
+.gradio/
+.env
+.DS_Store
