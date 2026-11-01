@@ -4,3 +4,5 @@ numpy
 pyyaml
 gradio
 pytest
+ruff
+imageio-ffmpeg

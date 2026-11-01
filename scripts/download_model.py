@@ -29,7 +29,7 @@ def download(force: bool = False) -> Path:
     print(f"Downloading {MODEL_URL}")
     try:
         urllib.request.urlretrieve(MODEL_URL, tmp_path)
-    except Exception as exc:  # network errors, HTTP errors
+    except OSError as exc:  # URLError / HTTPError are OSError subclasses
         tmp_path.unlink(missing_ok=True)
         sys.exit(f"Download failed: {exc}")
     tmp_path.replace(MODEL_PATH)
