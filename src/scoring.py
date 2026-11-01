@@ -62,6 +62,7 @@ class RuleFileError(ValueError):
 # --------------------------------------------------------------------------- data model
 @dataclass(frozen=True)
 class Rule:
+    """One coach-defined rule: what to measure, the ideal range, tolerance, weight and fix text."""
     id: str
     label: str
     category: str
@@ -75,6 +76,7 @@ class Rule:
 
     @property
     def ideal_text(self) -> str:
+        """The ideal range in words, e.g. "0.5 to 0.9" or "at most 0.15"."""
         if self.ideal_min is not None and self.ideal_max is not None:
             return f"{self.ideal_min:g} to {self.ideal_max:g}"
         if self.ideal_min is not None:
@@ -84,6 +86,7 @@ class Rule:
 
 @dataclass(frozen=True)
 class RuleSet:
+    """All rules for one shot type, as loaded from its YAML file."""
     shot: str
     title: str
     status: str | None          # e.g. "PLACEHOLDER - to be set by coaches"
@@ -95,6 +98,7 @@ class RuleSet:
 
 @dataclass(frozen=True)
 class RuleResult:
+    """How one rule scored on a clip (or that it was skipped)."""
     rule: Rule
     value: float | None         # None when the metric could not be measured
     confidence: float
@@ -104,11 +108,13 @@ class RuleResult:
 
     @property
     def status(self) -> str:
+        """"passed", "failed" or "skipped"."""
         return "skipped" if self.score is None else ("passed" if self.passed else "failed")
 
 
 @dataclass(frozen=True)
 class SubScore:
+    """Score of one category (e.g. Footwork) out of 100."""
     category: str
     score: float | None         # 0..100; None if none of its rules could be measured
     confidence: float
@@ -118,6 +124,7 @@ class SubScore:
 
 @dataclass(frozen=True)
 class Fix:
+    """One recommended fix with its drill, ranked by weight times deficit."""
     rule_id: str
     label: str
     category: str
@@ -130,6 +137,7 @@ class Fix:
 
 @dataclass(frozen=True)
 class ScoreResult:
+    """The full scoring outcome: total, sub-scores, per-rule results and top fixes."""
     shot: str
     title: str
     status: str | None
@@ -141,14 +149,17 @@ class ScoreResult:
 
     @property
     def passed(self) -> list[RuleResult]:
+        """Rules that met their target."""
         return [r for r in self.rule_results if r.status == "passed"]
 
     @property
     def failed(self) -> list[RuleResult]:
+        """Rules that missed their target."""
         return [r for r in self.rule_results if r.status == "failed"]
 
     @property
     def skipped(self) -> list[RuleResult]:
+        """Rules whose metric could not be measured."""
         return [r for r in self.rule_results if r.status == "skipped"]
 
 
@@ -157,7 +168,8 @@ def _is_number(x: object) -> bool:
     return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
-def _parse_text(value: object, where: str, field_name: str, ideal_min, ideal_max,
+def _parse_text(value: object, where: str, field_name: str, ideal_min: float | None,
+                ideal_max: float | None,
                 problems: list[str]) -> dict[str, str]:
     """A fix/drill is one string, or {low: ..., high: ...} for direction-specific wording."""
     if isinstance(value, str) and value.strip():

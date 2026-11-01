@@ -74,7 +74,7 @@ CSS = """
 _PROGRESS = gr.Progress()   # Gradio injects the live tracker into parameters defaulting to this
 
 
-def run_analysis(video, shot_type, progress=_PROGRESS):
+def run_analysis(video: str | None, shot_type: str, progress: gr.Progress = _PROGRESS) -> tuple:
     """Gradio handler: returns the values for every output component."""
     empty = ("", None, [], "", "", [], [], None)
     if not video:
@@ -82,6 +82,7 @@ def run_analysis(video, shot_type, progress=_PROGRESS):
         return empty
 
     def on_stage(name: str) -> None:
+        """Show the pipeline's current stage on the Gradio progress bar."""
         index = STAGE_ORDER.index(name) if name in STAGE_ORDER else 0
         progress(index / len(STAGE_ORDER), desc=name)
 
@@ -136,6 +137,7 @@ def _analysis_tab() -> None:
 
 
 def build_app() -> gr.Blocks:
+    """Assemble the two-tab Gradio app: analysis and coach labelling."""
     with gr.Blocks(title=TITLE, fill_width=False) as demo:
         gr.Markdown(f"# {TITLE}\n{INTRO}")
         with gr.Tabs():

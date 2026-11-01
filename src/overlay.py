@@ -70,6 +70,7 @@ def draw_skeleton(frame: np.ndarray, landmarks: np.ndarray | None,
     vis = np.nan_to_num(landmarks[:, 3])
 
     def draw(target: np.ndarray, faded: bool) -> None:
+        """Draw the limbs and joints that are (not) faded onto ``target``."""
         for a, b in CONNECTIONS:
             if not (valid[a] and valid[b]):
                 continue
@@ -259,6 +260,7 @@ def _parse_key(text: str) -> tuple[str, int]:
 
 
 def main() -> None:
+    """Parse the command line and render an overlay video."""
     parser = argparse.ArgumentParser(description="Render a skeleton overlay video.")
     parser.add_argument("video", help="input video")
     parser.add_argument("--out", help="output mp4 (default: outputs/<name>_overlay.mp4)")

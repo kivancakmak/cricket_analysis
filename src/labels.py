@@ -65,6 +65,7 @@ def rules_hash(shot_type: str) -> str:
 
 
 def clean_coach_id(text: str | None) -> str:
+    """Tidy a typed coach ID: collapse whitespace and cap the length."""
     return " ".join((text or "").split())[:40]
 
 

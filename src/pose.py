@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -43,6 +44,7 @@ class PoseSequence:
 
     @property
     def n_frames(self) -> int:
+        """Number of frames in the clip."""
         return len(self.detected)
 
     def frame(self, i: int) -> np.ndarray | None:
@@ -50,9 +52,11 @@ class PoseSequence:
         return self.landmarks[i] if self.detected[i] else None
 
     def world_frame(self, i: int) -> np.ndarray | None:
+        """World landmarks (33, 4) of frame ``i``, or None if no person was detected."""
         return self.world_landmarks[i] if self.detected[i] else None
 
     def detection_rate(self) -> float:
+        """Share of frames with a detected person (0-1)."""
         return float(self.detected.mean()) if self.n_frames else 0.0
 
     def mean_visibility(self) -> float:
@@ -62,6 +66,7 @@ class PoseSequence:
         return float(self.landmarks[self.detected][:, :, 3].mean())
 
     def save(self, path: str | Path) -> None:
+        """Write the sequence to a compressed ``.npz`` file."""
         np.savez_compressed(
             path,
             fps=self.fps,
@@ -74,6 +79,7 @@ class PoseSequence:
 
     @classmethod
     def load(cls, path: str | Path) -> PoseSequence:
+        """Read a sequence written by ``save``."""
         with np.load(path) as d:
             width, height = (int(v) for v in d["size"])
             return cls(
@@ -87,7 +93,7 @@ class PoseSequence:
             )
 
 
-def _to_array(landmarks) -> np.ndarray:
+def _to_array(landmarks: Sequence) -> np.ndarray:
     return np.array(
         [[lm.x, lm.y, lm.z, lm.visibility] for lm in landmarks], dtype=np.float32
     )
@@ -221,6 +227,7 @@ def smooth_pose(seq: PoseSequence, min_cutoff: float = 1.5, beta: float = 10.0) 
 
 
 def main() -> None:
+    """Parse the command line and print detection statistics for a video."""
     parser = argparse.ArgumentParser(description="Extract pose from a video and print stats.")
     parser.add_argument("video", help="path to a video file")
     parser.add_argument("--save", help="optional .npz path to save the raw PoseSequence")

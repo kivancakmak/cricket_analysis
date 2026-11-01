@@ -14,7 +14,7 @@ DISCLAIMER = ("Demo only: the scoring rules are placeholders until a coach has s
 
 
 # ----------------------------------------------------------------------------- rendering
-def _esc(text) -> str:
+def _esc(text: object) -> str:
     return html.escape(str(text))
 
 
@@ -28,6 +28,7 @@ def score_band(score: float) -> tuple[str, str]:
 
 
 def confidence_label(confidence: float) -> str:
+    """Plain-word band (high / medium / low) for a 0-1 confidence."""
     return "high" if confidence >= 0.7 else "medium" if confidence >= 0.45 else "low"
 
 
@@ -90,6 +91,7 @@ def render_fixes(result: AnalysisResult) -> str:
 
 
 def render_timing(result: AnalysisResult) -> str:
+    """One-line processing-time note, with the slowest stages broken out."""
     t = result.timings
     if not t:
         return ""
@@ -100,12 +102,14 @@ def render_timing(result: AnalysisResult) -> str:
 
 
 def metrics_rows(result: AnalysisResult) -> list[list]:
+    """Rows for the raw-metrics table."""
     if not result.metrics:
         return []
     return [[name, round(m.value, 3), round(m.confidence, 2)] for name, m in result.metrics.values.items()]
 
 
 def rules_rows(result: AnalysisResult) -> list[list]:
+    """Rows for the rule-results table."""
     if not result.score:
         return []
     rows = []
@@ -117,6 +121,7 @@ def rules_rows(result: AnalysisResult) -> list[list]:
 
 
 def gallery_items(result: AnalysisResult) -> list[tuple[str, str]]:
+    """(image path, caption) pairs for the key-frame gallery."""
     moments = result.key_moments
     if not result.ok or not moments:
         return []

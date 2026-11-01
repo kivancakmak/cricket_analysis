@@ -39,7 +39,7 @@ import cv2
 from src.metrics import Metrics, compute_metrics
 from src.orientation import Orientation, detect_orientation
 from src.overlay import export_key_frames, render_overlay
-from src.phases import KeyMoments, detect_key_moments
+from src.phases import KeyMoment, KeyMoments, detect_key_moments
 from src.pose import extract_pose, smooth_pose
 from src.quality import QualityCheck, QualityReport, assess_quality, check_clip_length
 from src.scoring import SHOT_TYPES, ScoreResult, load_rules, score_shot
@@ -74,6 +74,7 @@ class AnalysisResult:
 
     @property
     def ok(self) -> bool:
+        """True when the clip was analysed and scored."""
         return self.status == "ok"
 
     def to_dict(self) -> dict:
@@ -97,15 +98,16 @@ class AnalysisResult:
         })
 
     def to_json(self, indent: int | None = 2) -> str:
+        """``to_dict()`` as a JSON string (never contains NaN)."""
         return json.dumps(self.to_dict(), indent=indent, allow_nan=False)
 
 
 # --------------------------------------------------------------------------- serialisation
-def _path(p) -> str | None:
+def _path(p: object | None) -> str | None:
     return None if p is None else str(p)
 
 
-def _clean(obj):
+def _clean(obj: object) -> object:
     """Recursively make plain JSON data: floats stay floats, NaN/inf become None."""
     if isinstance(obj, dict):
         return {str(k): _clean(v) for k, v in obj.items()}
@@ -122,14 +124,14 @@ def _check_dict(c: QualityCheck) -> dict:
     return {"name": c.name, "passed": c.passed, "detail": c.detail, "message": c.message, "value": c.value}
 
 
-def _quality_dict(q: QualityReport | None):
+def _quality_dict(q: QualityReport | None) -> dict | None:
     if q is None:
         return None
     return {"ok": q.ok, "message": q.message, "instructions": q.instructions,
             "checks": [_check_dict(c) for c in q.checks]}
 
 
-def _orientation_dict(o: Orientation | None):
+def _orientation_dict(o: Orientation | None) -> dict | None:
     if o is None:
         return None
     return {"facing": o.facing, "facing_confidence": o.facing_confidence,
@@ -138,24 +140,25 @@ def _orientation_dict(o: Orientation | None):
             "confidence": o.confidence}
 
 
-def _moments_dict(k: KeyMoments | None):
+def _moments_dict(k: KeyMoments | None) -> dict | None:
     if k is None:
         return None
-    def one(m):
+    def one(m: KeyMoment | None) -> dict | None:
+        """One key moment as plain data, or None."""
         return None if m is None else {"frame": m.frame, "time_s": m.time_s, "confidence": m.confidence}
 
     return {"stance": one(k.stance), "front_foot_landing": one(k.front_foot_landing),
             "contact": one(k.contact), "notes": list(k.notes)}
 
 
-def _metrics_dict(m: Metrics | None):
+def _metrics_dict(m: Metrics | None) -> dict | None:
     if m is None:
         return None
     return {"values": {n: {"value": v.value, "confidence": v.confidence} for n, v in m.values.items()},
             "torso_px": m.torso_px, "body_height_px": m.body_height_px, "notes": list(m.notes)}
 
 
-def _score_dict(s: ScoreResult | None):
+def _score_dict(s: ScoreResult | None) -> dict | None:
     if s is None:
         return None
     return {
@@ -228,11 +231,13 @@ def analyze(
     started = time.perf_counter()
 
     def stage(name: str) -> float:
+        """Tell the UI a stage is starting and return the start time."""
         if on_stage:
             on_stage(name)
         return time.perf_counter()
 
     def finish(result: AnalysisResult) -> AnalysisResult:
+        """Record the total time and return the result."""
         timings["total"] = time.perf_counter() - started
         result.timings = timings
         return result
@@ -300,6 +305,7 @@ def analyze(
 
 
 def main() -> None:
+    """Parse the command line, analyse the clip and print the JSON result."""
     parser = argparse.ArgumentParser(description="Analyse a batting clip and print the result as JSON.")
     parser.add_argument("video")
     parser.add_argument("shot_type", choices=SHOT_TYPES)

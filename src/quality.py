@@ -91,6 +91,7 @@ MOMENT_ADVICE = {
 
 @dataclass(frozen=True)
 class QualityCheck:
+    """Outcome of one quality check, with the friendly instruction to show if it failed."""
     name: str
     passed: bool
     detail: str                 # what was measured, e.g. "detected in 62% of frames"
@@ -100,15 +101,18 @@ class QualityCheck:
 
 @dataclass(frozen=True)
 class QualityReport:
+    """All quality checks for a clip; empty ``message`` means the clip is fine."""
     checks: tuple[QualityCheck, ...]
     notes: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def ok(self) -> bool:
+        """True when every check passed."""
         return all(c.passed for c in self.checks)
 
     @property
     def problems(self) -> list[QualityCheck]:
+        """Every failing check, including ones that are only a consequence of another."""
         return [c for c in self.checks if not c.passed]
 
     @property
@@ -257,6 +261,7 @@ def assess_quality(seq: PoseSequence, orientation: Orientation, moments: KeyMome
 
 
 def main() -> None:
+    """Parse the command line, run the whole analysis chain and print the quality report."""
     from src.metrics import compute_metrics
     from src.orientation import detect_orientation
     from src.phases import detect_key_moments

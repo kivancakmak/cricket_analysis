@@ -94,6 +94,7 @@ def spearman(x: Sequence[float], y: Sequence[float]) -> float:
 # --------------------------------------------------------------------------- per-kind statistics
 @dataclass(frozen=True)
 class RuleStat:
+    """Agreement of the AI's pass/fail with the coach's for one rule."""
     item: str
     n: int
     accuracy: float
@@ -107,6 +108,7 @@ class RuleStat:
 
 @dataclass(frozen=True)
 class MomentStat:
+    """Timing error of one key moment (AI frame minus coach frame, in milliseconds)."""
     item: str
     n: int
     mean_error_ms: float      # signed: positive = AI is later than the coach
@@ -119,6 +121,7 @@ class MomentStat:
 
 @dataclass(frozen=True)
 class ScoreStat:
+    """Agreement between the AI's and the coach's overall scores."""
     n: int
     pearson: float
     spearman: float
@@ -127,7 +130,7 @@ class ScoreStat:
     rmse: float
 
 
-def _float(text) -> float | None:
+def _float(text: object) -> float | None:
     try:
         value = float(text)
     except (TypeError, ValueError):

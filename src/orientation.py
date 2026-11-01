@@ -80,6 +80,7 @@ class Orientation:
 
     @property
     def back_leg(self) -> str:
+        """The leg that is not the front leg ("unknown" if the front leg is unknown)."""
         return {"left": "right", "right": "left"}.get(self.front_leg, "unknown")
 
     @property
@@ -145,6 +146,7 @@ def detect_orientation(seq: PoseSequence, config: dict | None = None) -> Orienta
     mv = cfg["min_visibility"]
 
     def x_of(idx: int) -> np.ndarray:
+        """Pixel x of a landmark over the stance window."""
         return _points(seq, window, idx, mv)[:, 0]
 
     # Body-size scale: shoulder-mid to hip-mid distance in pixels.
@@ -218,6 +220,7 @@ def detect_orientation(seq: PoseSequence, config: dict | None = None) -> Orienta
 
 
 def main() -> None:
+    """Parse the command line and print the orientation of the batter in a video."""
     parser = argparse.ArgumentParser(description="Detect batter orientation in a video.")
     parser.add_argument("video", help="path to a video file")
     args = parser.parse_args()

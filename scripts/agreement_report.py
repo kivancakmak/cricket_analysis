@@ -20,6 +20,7 @@ from src.labels import LABELS_CSV, load_labels
 
 
 def main() -> None:
+    """Parse the command line, build the report and write it."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--labels", type=Path, default=LABELS_CSV, help="labels CSV (default: labels/labels.csv)")
     parser.add_argument("--out", type=Path, default=Path("outputs/agreement_report.md"),

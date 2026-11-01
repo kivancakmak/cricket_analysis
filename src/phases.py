@@ -71,6 +71,7 @@ PHASE_CONFIG: dict = {
 
 @dataclass(frozen=True)
 class KeyMoment:
+    """One detected key moment: frame index, time in seconds and confidence (0-1)."""
     frame: int
     time_s: float
     confidence: float
@@ -91,6 +92,7 @@ class PhaseSignals:
 
 @dataclass(frozen=True)
 class KeyMoments:
+    """The three key moments of a shot (None where not found) plus the signals and notes behind them."""
     stance: KeyMoment | None
     front_foot_landing: KeyMoment | None
     contact: KeyMoment | None
@@ -211,6 +213,7 @@ def detect_key_moments(seq: PoseSequence, orientation: Orientation,
     n = seq.n_frames
 
     def moment(frame: int, confidence: float) -> KeyMoment:
+        """Build a ``KeyMoment`` with the confidence clipped to 0-1."""
         return KeyMoment(int(frame), float(frame / fps), float(np.clip(confidence, 0.0, 1.0)))
 
     front_ankle = L_ANKLE if orientation.front_leg == "left" else R_ANKLE

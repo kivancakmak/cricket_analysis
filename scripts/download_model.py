@@ -38,6 +38,7 @@ def download(force: bool = False) -> Path:
 
 
 def main() -> None:
+    """Parse the command line and download the model."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--force", action="store_true", help="re-download even if present")
     download(force=parser.parse_args().force)

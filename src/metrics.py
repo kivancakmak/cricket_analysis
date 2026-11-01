@@ -53,7 +53,7 @@ from __future__ import annotations
 
 import argparse
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -80,12 +80,14 @@ METRIC_CONFIG: dict = {
 
 @dataclass(frozen=True)
 class Metric:
+    """A measured value and how far to trust it (confidence 0-1)."""
     value: float
     confidence: float
 
 
 @dataclass(frozen=True)
 class Metrics:
+    """All metrics measured on one clip, by name, plus notes on any that could not be measured."""
     values: dict[str, Metric]
     torso_px: float = math.nan
     body_height_px: float = math.nan
@@ -95,6 +97,7 @@ class Metrics:
         return self.values[name]
 
     def get(self, name: str) -> Metric | None:
+        """The metric called ``name``, or None if it could not be measured."""
         return self.values.get(name)
 
 
@@ -105,17 +108,21 @@ class _Pose:
         self.xy, self.vis = xy, vis
 
     def point(self, idx: int) -> np.ndarray:
+        """Pixel (x, y) of a landmark."""
         return self.xy[idx]
 
-    def min_vis(self, indices) -> float:
+    def min_vis(self, indices: Iterable[int]) -> float:
+        """Visibility of the least visible landmark in ``indices``."""
         return float(min(self.vis[i] for i in indices))
 
     def visible(self, idx: int, threshold: float) -> bool:
+        """True if the landmark has finite coordinates and at least ``threshold`` visibility."""
         return bool(np.isfinite(self.xy[idx]).all() and self.vis[idx] >= threshold)
 
 
 @dataclass(frozen=True)
 class _Context:
+    """Everything a metric function needs besides the pose: direction, front/back joints, body size."""
     d: float                  # +1 if facing image-right, -1 if image-left
     front: dict[str, int]     # landmark indices of the front side
     back: dict[str, int]
@@ -145,23 +152,23 @@ def _head(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
 
 
 # Each metric function returns (value, landmarks it used) from a pose snapshot.
-def _head_over_front_knee(p: _Pose, c: _Context):
+def _head_over_front_knee(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     head_x, used = _head(p, c)
     knee = p.point(c.front["knee"])
     return c.d * (head_x - knee[0]) / c.torso, (*used, c.front["knee"])
 
 
-def _front_knee_angle(p: _Pose, c: _Context):
+def _front_knee_angle(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     idx = (c.front["hip"], c.front["knee"], c.front["ankle"])
     return _angle(*(p.point(i) for i in idx)), idx
 
 
-def _stride_length(p: _Pose, c: _Context):
+def _stride_length(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     front, back = p.point(c.front["ankle"]), p.point(c.back["ankle"])
     return c.d * (front[0] - back[0]) / c.height, (c.front["ankle"], c.back["ankle"])
 
 
-def _balance(p: _Pose, c: _Context):
+def _balance(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     hips = (c.front["hip"], c.back["hip"])
     hip_x = (p.point(hips[0])[0] + p.point(hips[1])[0]) / 2
     front_x, back_x = p.point(c.front["ankle"])[0], p.point(c.back["ankle"])[0]
@@ -171,7 +178,7 @@ def _balance(p: _Pose, c: _Context):
     return c.d * (hip_x - back_x) / base, (*hips, c.front["ankle"], c.back["ankle"])
 
 
-def _front_elbow_height(p: _Pose, c: _Context):
+def _front_elbow_height(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     idx = (c.front["shoulder"], c.front["elbow"], c.front["wrist"])
     shoulder_y, elbow_y, wrist_y = (p.point(i)[1] for i in idx)
     span = wrist_y - shoulder_y            # image y grows downwards: wrist below shoulder -> positive
@@ -180,7 +187,7 @@ def _front_elbow_height(p: _Pose, c: _Context):
     return (wrist_y - elbow_y) / span, idx
 
 
-def _spine_tilt(p: _Pose, c: _Context):
+def _spine_tilt(p: _Pose, c: _Context) -> tuple[float, tuple[int, ...]]:
     idx = (c.front["shoulder"], c.back["shoulder"], c.front["hip"], c.back["hip"])
     shoulders = (p.point(idx[0]) + p.point(idx[1])) / 2
     hips = (p.point(idx[2]) + p.point(idx[3])) / 2
@@ -305,6 +312,7 @@ def compute_metrics(seq: PoseSequence, orientation: Orientation, moments: KeyMom
 
 
 def main() -> None:
+    """Parse the command line and print the metrics for a video."""
     parser = argparse.ArgumentParser(description="Compute technique metrics for a video.")
     parser.add_argument("video", help="path to a video file")
     args = parser.parse_args()

@@ -27,6 +27,7 @@ COLORS = {"STANCE": "tab:green", "FRONT FOOT DOWN": "tab:blue", "CONTACT": "tab:
 
 
 def load_pose(video: Path, cache_dir: Path) -> PoseSequence:
+    """Load a video's pose from the cache, extracting and caching it first if needed."""
     cache = cache_dir / f"{video.stem}.npz"
     if cache.exists():
         return PoseSequence.load(cache)
@@ -37,6 +38,7 @@ def load_pose(video: Path, cache_dir: Path) -> PoseSequence:
 
 
 def plot(video: Path, out_dir: Path, cache_dir: Path) -> Path:
+    """Plot velocity curves with the detected key moments for one video; returns the PNG path."""
     seq = smooth_pose(load_pose(video, cache_dir))
     orientation = detect_orientation(seq)
     moments = detect_key_moments(seq, orientation)
@@ -93,6 +95,7 @@ def plot(video: Path, out_dir: Path, cache_dir: Path) -> Path:
 
 
 def main() -> None:
+    """Parse the command line and plot every video given."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("videos", nargs="+", type=Path)
     parser.add_argument("--out-dir", type=Path, default=Path("outputs/plots"))

@@ -52,7 +52,7 @@ def _frame_info(index: int, state: dict, moment: str) -> str:
     return f"{text} &middot; {verdict}"
 
 
-def show_frame(index, state: dict | None, moment: str) -> tuple[str | None, str]:
+def show_frame(index: float | None, state: dict | None, moment: str) -> tuple[str | None, str]:
     """Image path and caption for the frame under a slider."""
     if not state or not state.get("frames"):
         return None, ""
@@ -61,13 +61,14 @@ def show_frame(index, state: dict | None, moment: str) -> tuple[str | None, str]
 
 
 def rule_choice_info(rule: dict) -> str:
+    """Short description of what the AI said about a rule, shown under its radio buttons."""
     if rule["status"] == "skipped":
         return "AI: could not measure this on the clip."
     return (f"AI says {rule['status'].upper()} - measured {rule['value']:.2f}, "
             f"target {rule['ideal']}.")
 
 
-def load_clip(video, shot_type: str, coach_id: str, previous_state: dict | None = None,
+def load_clip(video: str | None, shot_type: str, coach_id: str, previous_state: dict | None = None,
               on_stage: Callable[[str], None] | None = None) -> dict:
     """Analyse the clip and prepare the form. Returns {component name: new value}."""
     out: dict = {"form": gr.update(visible=False)}
@@ -129,8 +130,8 @@ def load_clip(video, shot_type: str, coach_id: str, previous_state: dict | None 
     return out
 
 
-def save_clip(state: dict | None, coach_id: str, confirmed: bool, stance, landing, contact,
-              overall, notes: str, *rule_values) -> str:
+def save_clip(state: dict | None, coach_id: str, confirmed: bool, stance: int, landing: int, contact: int,
+              overall: float | None, notes: str, *rule_values: str | None) -> str:
     """Save the coach's labels; returns the message to show."""
     coach = labels.clean_coach_id(coach_id)
     if not state or not state.get("clip_id"):
@@ -205,8 +206,11 @@ def build_labelling_tab(stage_order: list[str], progress: gr.Progress) -> None:
 
     names = list(comps)
 
-    def on_load(video_path, shot_type, coach_id, previous, prog=progress):
+    def on_load(video_path: str | None, shot_type: str, coach_id: str, previous: dict | None,
+                prog: gr.Progress = progress) -> list:
+        """Gradio handler: run ``load_clip`` and return the values in component order."""
         def on_stage(name: str) -> None:
+            """Show the pipeline's current stage on the Gradio progress bar."""
             prog(stage_order.index(name) / len(stage_order) if name in stage_order else 0, desc=name)
         values = load_clip(video_path, shot_type, coach_id, previous, on_stage=on_stage)
         return [values.get(name, gr.update()) for name in names]
